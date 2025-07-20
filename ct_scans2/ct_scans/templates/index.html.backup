@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT Spine - Third Y Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>CT Spine - Third Y Detector</h1>
+            <div class="status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <aside class="sidebar">
+                <!-- Dataset Info -->
+                <div class="card">
+                    <h3>Dataset Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Patient ID:</label>
+                            <span id="patientInfo">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Slices:</label>
+                            <span id="sliceCount">0</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Study Date:</label>
+                            <span id="studyDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="card">
+                    <h3>Navigation</h3>
+                    <div class="navigation">
+                        <div class="slider-group">
+                            <label>Slice: <span id="currentSlice">1</span> / <span id="totalSlices">0</span></label>
+                            <input type="range" id="sliceSlider" class="slider" min="0" max="100" value="0">
+                        </div>
+                        <div class="nav-buttons">
+                            <button id="prevBtn" class="btn btn-secondary">← Previous</button>
+                            <button id="nextBtn" class="btn btn-secondary">Next →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="card">
+                    <h3>Analysis Controls</h3>
+                    <div class="controls">
+                        <input type="text" id="startIdInput" placeholder="Start ID (e.g. 1)" value="1" class="input">
+                        <button id="runAnalysisBtn" class="btn btn-primary">Run Y3 Analysis</button>
+                        <button id="resetBtn" class="btn btn-outline">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card">
+                    <h3>Analysis Results</h3>
+                    <div class="results" id="resultsPanel">
+                        <div class="result-item">
+                            <label>Y Points Found:</label>
+                            <span id="currentYPoints">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Total Y Count:</label>
+                            <span id="totalYCount">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Third Y Status:</label>
+                            <span id="thirdYStatus" class="status-pending">Pending</span>
+                        </div>
+                        <div class="result-item" id="thirdYLocation" style="display: none;">
+                            <label>Third Y Found in:</label>
+                            <span id="thirdYSlice">-</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Image Area -->
+            <main class="image-area">
+                <div class="image-container">
+                    <div class="image-header">
+                        <h2 id="imageTitle">Select a slice to view</h2>
+                        <div class="view-controls">
+                            <button class="view-btn active" data-view="windowed">Original</button>
+                            <button class="view-btn" data-view="mask">Binary Mask</button>
+                            <button class="view-btn" data-view="skeleton">Skeleton + Y Points</button>
+                        </div>
+                    </div>
+
+                    <div class="image-display">
+                        <img id="mainImage" src="" alt="CT Scan" />
+                        <div class="image-placeholder" id="imagePlaceholder">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">🏥</div>
+                                <p>Load dataset to view CT images</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-info">
+                        <div class="info-row">
+                            <span>Instance: <strong id="instanceNumber">-</strong></span>
+                            <span>Y Points: <strong id="yPointsCount">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar"></div>
+            <span class="progress-text" id="progressText">Processing...</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

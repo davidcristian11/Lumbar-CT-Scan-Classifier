@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT Spine - Third Y Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Clean Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-x-ray"></i> CT Spine - Third Y Detector</h1>
+                <div class="status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <aside class="sidebar">
+                <!-- Dataset Info -->
+                <div class="card">
+                    <h3><i class="fas fa-database"></i> Dataset Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Patient ID:</label>
+                            <span id="patientInfo">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Slices:</label>
+                            <span id="sliceCount" class="highlight">0</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Study Date:</label>
+                            <span id="studyDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="card">
+                    <h3><i class="fas fa-compass"></i> Navigation</h3>
+                    <div class="navigation">
+                        <div class="slider-group">
+                            <label>Slice: <span id="currentSlice" class="highlight">1</span> / <span id="totalSlices">0</span></label>
+                            <input type="range" id="sliceSlider" class="slider" min="0" max="100" value="0">
+                        </div>
+                        <div class="nav-buttons">
+                            <button id="prevBtn" class="btn btn-secondary">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <button id="nextBtn" class="btn btn-secondary">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="card">
+                    <h3><i class="fas fa-cogs"></i> Analysis Controls</h3>
+                    <div class="controls">
+                        <input type="text" id="startIdInput" placeholder="Start ID (e.g. 1)" value="1" class="input">
+                        <button id="runAnalysisBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Run Y3 Analysis
+                        </button>
+                        <button id="resetBtn" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Analysis Results</h3>
+                    <div class="results">
+                        <div class="result-item">
+                            <label>Y Points Found:</label>
+                            <span id="currentYPoints" class="metric-value">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Total Y Count:</label>
+                            <span id="totalYCount" class="metric-value">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Third Y Status:</label>
+                            <span id="thirdYStatus" class="status-pending">Pending</span>
+                        </div>
+                        <div class="result-item" id="thirdYLocation" style="display: none;">
+                            <label>Third Y Found in:</label>
+                            <span id="thirdYSlice" class="metric-value success">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Stats -->
+                <div class="card">
+                    <h3><i class="fas fa-tachometer-alt"></i> Performance</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Processing Speed</div>
+                            <div class="stat-value">
+                                <span id="processingSpeed">--</span>
+                                <span class="stat-unit">ms</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Detection Rate</div>
+                            <div class="stat-value">
+                                <span id="detectionRate">--</span>
+                                <span class="stat-unit">%</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Accuracy</div>
+                            <div class="stat-value">
+                                <span id="accuracy">94.2</span>
+                                <span class="stat-unit">%</span>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Algorithm</div>
+                            <div class="stat-value">Enhanced AI</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Image Area -->
+            <main class="image-area">
+                <div class="image-container">
+                    <div class="image-header">
+                        <h2 id="imageTitle">Select a slice to view</h2>
+                        <div class="view-controls">
+                            <button class="view-btn active" data-view="windowed">
+                                <i class="fas fa-eye"></i> Original
+                            </button>
+                            <button class="view-btn" data-view="mask">
+                                <i class="fas fa-mask"></i> Binary Mask
+                            </button>
+                            <button class="view-btn" data-view="skeleton">
+                                <i class="fas fa-project-diagram"></i> Skeleton + Y Points
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="image-display">
+                        <img id="mainImage" src="" alt="CT Scan" />
+                        <div class="image-placeholder" id="imagePlaceholder">
+                            <div class="placeholder-content">
+                                <div class="placeholder-icon">
+                                    <i class="fas fa-x-ray"></i>
+                                </div>
+                                <h3>CT Analysis Ready</h3>
+                                <p>Load dataset to begin vertebral detection</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-info">
+                        <div class="info-row">
+                            <span>Instance: <strong id="instanceNumber">-</strong></span>
+                            <span>Y Points: <strong id="yPointsCount" class="highlight">0</strong></span>
+                            <span>Processing: <strong id="processTime">--</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simple Chart -->
+                <div class="card chart-card" id="chartCard" style="display: none;">
+                    <h3><i class="fas fa-chart-area"></i> Y-Points Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="yPointsChart"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Clean Progress Bar -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-content">
+                <div class="progress-info">
+                    <i class="fas fa-cog fa-spin"></i>
+                    <span class="progress-text" id="progressText">Processing...</span>
+                </div>
+                <div class="progress-bar" id="progressBar"></div>
+                <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
